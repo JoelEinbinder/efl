@@ -31,7 +31,7 @@ td:not(:first-child) {
 
 table {
   margin: auto;
-  min-width: min(600px, calc(100vw - 40px));
+  min-width: min(700px, calc(100vw - 40px));
   border-radius: 5px;
 }
 
@@ -81,8 +81,8 @@ tr.team.expanded {
   max-height: calc(44px * 5);
   overflow: auto;
 }
-.matches {
-  width: 600px;
+body > .matches {
+  width: 700px;
 }
 .match {
   display: flex;
@@ -153,4 +153,7 @@ tr.team.expanded {
 }
 th {
   font-weight: normal;
+}
+.rate {
+  font-weight: bold;
 }

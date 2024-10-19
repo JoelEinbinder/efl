@@ -15,7 +15,7 @@ function renderLeague(leagueName, competitionId, automatics, playoffs, relegatio
   const tableBody = document.createElement('tbody');
   table.append(tableBody);
   const header = document.createElement('tr');
-  header.innerHTML = '<th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th>Rate</th><th>Last 5</th>';
+  header.innerHTML = '<th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th class="rate">Rate</th><th>Last 5</th>';
   tableBody.appendChild(header);
   let pos = 0;
   for (const team of squads.filter(x => x.competitionId === competitionId).map(makeTeam).sort(sortTeams)) {
@@ -56,7 +56,7 @@ function renderTeam(team, pos) {
     createTD(team.goalsAgainst),
     createTD(team.goalDifference),
     createTD(team.points),
-    createTD(team.rate.toFixed(2)),
+    createTD(namedText('rate', team.rate.toFixed(2))),
     createTD(...[...results(team.id)].slice(-5).map(x => namedText(x, ''))),
   );
   let toggled = false;
@@ -66,7 +66,7 @@ function renderTeam(team, pos) {
     if (toggled) {
       const details = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = 10;
+      td.colSpan = 11;
       details.classList.add('details');
       details.append(td);
       tr.after(details);
