@@ -5,7 +5,6 @@ const [
   fetch('./data/rounds.json').then(r => r.json()),
   fetch('./data/squads.json').then(r => r.json())
 ]);
-console.log(rounds, squads);
 
 function renderLeague(leagueName, competitionId, automatics, playoffs, relegations) {
   const h1 = document.createElement('h1');
