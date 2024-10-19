@@ -15,7 +15,7 @@ function renderLeague(leagueName, competitionId, automatics, playoffs, relegatio
   const tableBody = document.createElement('tbody');
   table.append(tableBody);
   const header = document.createElement('tr');
-  header.innerHTML = '<th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>F</th><th>A</th><th>GD</th><th>Pts</th><th>Rate</th>';
+  header.innerHTML = '<th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th>Rate</th><th>Last 5</th>';
   tableBody.appendChild(header);
   let pos = 0;
   for (const team of squads.filter(x => x.competitionId === competitionId).map(makeTeam).sort(sortTeams)) {
@@ -33,17 +33,21 @@ function renderLeague(leagueName, competitionId, automatics, playoffs, relegatio
 renderLeague('League 1', 11, 2, 4, 4);
 renderLeague('League 2', 12, 3, 4, 2);
 
+// document.body.append(renderMatches(2));
+
 function renderTeam(team, pos) {
   const tr = document.createElement('tr');
+  tr.classList.add('team');
   const logo = document.createElement('img');
   logo.classList.add('logo');
   logo.src = './light/' + team.id + '.png';
   logo.width = 32;
   logo.height = 32;
   tr.append(
-    createTD(namedText('pos', pos),
-    logo,
-    namedText('name', team.name)),
+    createTD(
+      namedText('pos', pos),
+      renderTeamName(team),
+    ),
     createTD(team.played),
     createTD(team.won),
     createTD(team.drawn),
@@ -53,19 +57,144 @@ function renderTeam(team, pos) {
     createTD(team.goalDifference),
     createTD(team.points),
     createTD(team.rate.toFixed(2)),
+    createTD(...[...results(team.id)].slice(-5).map(x => namedText(x, ''))),
   );
+  let toggled = false;
+  tr.onclick = event => {
+    toggled = !toggled;
+    tr.classList.toggle('expanded', toggled);
+    if (toggled) {
+      const details = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 10;
+      details.classList.add('details');
+      details.append(td);
+      tr.after(details);
+      renderMatches(team.id, td);
+    } else {
+      tr.nextElementSibling.remove();
+    }
+    event.preventDefault();
+  }
   return tr;
-  function createTD(...children) {
-    const td = document.createElement('td');
-    td.append(...children);
-    return td;
+}
+
+function createTD(...children) {
+  const td = document.createElement('td');
+  td.append(...children);
+  return td;
+}
+function namedText(name, text) {
+  const span = document.createElement('span');
+  span.textContent = text;
+  span.classList.add(name);
+  return span;
+}
+
+function * matchesForTeam(teamId) {
+  for (const round of rounds) {
+    for (const game of round.games) {
+      if (game.homeId !== teamId && game.awayId !== teamId)
+        continue;
+      yield game;
+    }
   }
-  function namedText(name, text) {
-    const span = document.createElement('span');
-    span.textContent = text;
-    span.classList.add(name);
-    return span;
+}
+
+function * results(teamId) {
+  for (const game of matchesForTeam(teamId)) {
+    if (game.status !== 'completed')
+      continue;
+    if (game.homeScore === game.awayScore) {
+      yield 'draw';
+    } else if (game.homeId === teamId) {
+      if (game.homeScore > game.awayScore)
+        yield 'win';
+      else
+        yield 'loss';
+    } else {
+      if (game.awayScore > game.homeScore)
+        yield 'win';
+      else
+        yield 'loss';
+    }
   }
+}
+
+function lastFive(teamId) {
+}
+function renderMatches(teamId, parent = document.body) {
+  const container = document.createElement('div');
+  container.classList.add('matches');
+  let scrollIndex = 0;
+  let index = 0;
+  for (const game of matchesForTeam(teamId)) {
+    const match = document.createElement('div');
+    match.classList.add('match');
+    container.appendChild(match);
+    const scoreTime = document.createElement('div');
+    scoreTime.classList.add('score-time');
+    if (game.status === 'completed')
+      scoreTime.append(namedText('score', game.homeScore + ' - ' + game.awayScore));
+    else if (game.status === 'postponed')
+      scoreTime.append(namedText('status', game.status));
+    else
+      scoreTime.append(
+        namedText('date', formatDate(new Date(game.date))),
+      );
+    const home = renderTeamName(findTeam(game.homeId), true);
+    const away = renderTeamName(findTeam(game.awayId));
+    if (game.status === 'completed') {
+      if (game.homeScore > game.awayScore)
+        home.classList.add('winner');
+      else if (game.homeScore < game.awayScore)
+        away.classList.add('winner');
+    }
+    if (game.status === 'completed')
+      scrollIndex = index;
+    index++;
+    match.append(
+      home,
+      scoreTime,
+      away,
+    );
+  }
+  parent.append(container);
+  container.scrollTop = 44 * (scrollIndex - 4);
+}
+
+/**
+ * @param {Date} date
+ */
+function formatDate(date) {
+  const now = new Date();
+  return `${date.toLocaleString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    // hour: 'numeric',
+    // minute: 'numeric',
+  })}`;
+}
+
+function findTeam(id) {
+  return squads.find(x => x.id === id);
+}
+
+function renderTeamName(team, isRight = false) {
+  const logo = document.createElement('img');
+  logo.classList.add('logo');
+  logo.src = './light/' + team.id + '.png';
+  logo.width = 28;
+  logo.height = 28;
+  const span = document.createElement('span');
+  span.classList.add('team-name');
+  const name = namedText('name', team.name);
+  if (isRight)
+    span.append(name, logo);
+  else
+    span.append(logo, name);
+  return span;
 }
 
 function makeTeam(team) {
