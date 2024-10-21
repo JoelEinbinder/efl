@@ -159,7 +159,8 @@ function renderMatches(teamId, parent = document.body) {
     );
   }
   parent.append(container);
-  container.scrollTop = 44 * (scrollIndex - 4);
+  const rowHeight = parseInt(window.getComputedStyle(document.body).getPropertyValue('--row-height'));
+  container.scrollTop = rowHeight * (scrollIndex - 4);
 }
 
 /**
