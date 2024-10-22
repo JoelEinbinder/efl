@@ -135,7 +135,23 @@ body > .matches {
   text-align: center;
   min-width: 150px;
 }
-.score {
+.playing {
+  border-radius: 5px;
+  margin: 0 5px;
+  padding: 3px;
+  color: white;
+  font-weight: bold;
+  font-size: 0.6em;
+  line-height:1em;
+}
+.playing.winning {
+  background-color: #34a853;
+}
+.playing.losing {
+  background-color: #ea4335;
+}
+.playing.drawing {
+  background-color: #888;
 }
 .team-name {
   white-space: nowrap;

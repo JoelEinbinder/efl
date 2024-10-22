@@ -42,11 +42,34 @@ function renderTeam(team, pos) {
   logo.src = './light/' + team.id + '.png';
   logo.width = 32;
   logo.height = 32;
+  const nameTd = createTD(
+    namedText('pos', pos),
+    renderTeamName(team),
+  );
+  for (const game of matchesForTeam(team.id)) {
+    if (game.status !== 'playing')
+      continue;
+    const score = document.createElement('span');
+    score.classList.add('playing');
+    score.textContent = game.homeScore + ' - ' + game.awayScore;
+    if (game.homeScore === game.awayScore)
+      score.classList.add('drawing');
+    else if (game.homeId === team.id) {
+      if (game.homeScore > game.awayScore)
+        score.classList.add('winning');
+      else
+        score.classList.add('losing');
+    } else {
+      if (game.awayScore > game.homeScore)
+        score.classList.add('winning');
+      else
+        score.classList.add('losing');
+    }
+
+    nameTd.append(score);
+  }
   tr.append(
-    createTD(
-      namedText('pos', pos),
-      renderTeamName(team),
-    ),
+    nameTd,
     createTD(team.played),
     createTD(team.won),
     createTD(team.drawn),
@@ -102,7 +125,7 @@ function * matchesForTeam(teamId) {
 
 function * results(teamId) {
   for (const game of matchesForTeam(teamId)) {
-    if (game.status !== 'completed')
+    if (!completedOrPlaying(game.status))
       continue;
     if (game.homeScore === game.awayScore) {
       yield 'draw';
@@ -133,7 +156,7 @@ function renderMatches(teamId, parent = document.body) {
     container.appendChild(match);
     const scoreTime = document.createElement('div');
     scoreTime.classList.add('score-time');
-    if (game.status === 'completed')
+    if (completedOrPlaying(game.status))
       scoreTime.append(namedText('score', game.homeScore + ' - ' + game.awayScore));
     else if (game.status === 'postponed')
       scoreTime.append(namedText('status', game.status));
@@ -143,13 +166,13 @@ function renderMatches(teamId, parent = document.body) {
       );
     const home = renderTeamName(findTeam(game.homeId), true);
     const away = renderTeamName(findTeam(game.awayId));
-    if (game.status === 'completed') {
+    if (completedOrPlaying(game.status)) {
       if (game.homeScore > game.awayScore)
         home.classList.add('winner');
       else if (game.homeScore < game.awayScore)
         away.classList.add('winner');
     }
-    if (game.status === 'completed')
+    if (completedOrPlaying(game.status))
       scrollIndex = index;
     index++;
     match.append(
@@ -206,7 +229,7 @@ function makeTeam(team) {
   let goalsAgainst = 0;
   for (const round of rounds) {
     for (const game of round.games) {
-      if (game.status !== 'completed')
+      if (!completedOrPlaying(game.status))
         continue;
       if (game.homeId === team.id) {
         played++;
@@ -249,6 +272,10 @@ function makeTeam(team) {
     goalDifference,
     rate,
   }
+}
+
+function completedOrPlaying(status) {
+  return status === 'playing' || status === 'completed';
 }
 
 function sortTeams(a, b) {
