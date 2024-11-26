@@ -113,14 +113,19 @@ function namedText(name, text) {
   return span;
 }
 
-function * matchesForTeam(teamId) {
+function matchesForTeam(teamId) {
+  const matches = [];
   for (const round of rounds) {
     for (const game of round.games) {
       if (game.homeId !== teamId && game.awayId !== teamId)
         continue;
-      yield game;
+      matches.push(game);
     }
   }
+  matches.sort((a, b) => {
+    return new Date(a.date) - new Date(b.date);
+  })
+  return matches;
 }
 
 function * results(teamId) {
@@ -164,6 +169,8 @@ function renderMatches(teamId, parent = document.body) {
       scoreTime.append(
         namedText('date', formatDate(new Date(game.date))),
       );
+    if (game.status === 'playing')
+      scoreTime.classList.add('ongoing');
     const home = renderTeamName(findTeam(game.homeId), true);
     const away = renderTeamName(findTeam(game.awayId));
     if (completedOrPlaying(game.status)) {
