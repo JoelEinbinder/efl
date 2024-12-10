@@ -29,6 +29,8 @@ function renderLeague(leagueName, competitionId, automatics, playoffs, relegatio
     tableBody.appendChild(hr);
   }
 }
+if (window.location.search.includes('championship'))
+renderLeague('Championship', 10, 2, 4, 3);
 renderLeague('League 1', 11, 2, 4, 4);
 renderLeague('League 2', 12, 3, 4, 2);
 
